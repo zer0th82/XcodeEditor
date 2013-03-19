@@ -20,7 +20,6 @@ namespace UnityEditor.XCodeEditor
 		private string _rootObjectKey;
 	
 		public string projectRootPath { get; private set; }
-		private FileInfo projectFileInfo;
 		
 		public string filePath { get; private set; }
 		private string sourcePathRoot;
@@ -55,6 +54,7 @@ namespace UnityEditor.XCodeEditor
 		
 		public XCProject( string filePath ) : this()
 		{
+			filePath = Path.GetFullPath(filePath);
 			if( !System.IO.Directory.Exists( filePath ) ) {
 				Debug.LogWarning( "Path does not exists." );
 				return;
@@ -76,8 +76,10 @@ namespace UnityEditor.XCodeEditor
 				this.filePath = projects[ 0 ];	
 			}
 			
-			projectFileInfo = new FileInfo( Path.Combine( this.filePath, "project.pbxproj" ) );
-			string contents = projectFileInfo.OpenText().ReadToEnd();
+			FileInfo projectFileInfo = new FileInfo( Path.Combine( this.filePath, "project.pbxproj" ) );
+			StreamReader sr = projectFileInfo.OpenText();
+			string contents = sr.ReadToEnd();
+			sr.Close();
 			
 			PBXParser parser = new PBXParser();
 			_datastore = parser.Decode( contents );
