@@ -887,7 +887,7 @@ namespace UnityEditor.XCodeEditor
 			foreach( XCModFile libRef in mod.libs ) {
 				string completeLibPath = System.IO.Path.Combine( "usr/lib", libRef.filePath );
 				this.AddFile( completeLibPath, librariesGroup, "SDKROOT", true, libRef.isWeak );
-				Debug.Log(mod.group + ": Adding lib " + completeLibPath);
+				//Debug.Log(mod.group + ": Adding lib " + completeLibPath);
 			}
 			
 			//Debug.Log( "Adding frameworks..." );
@@ -897,7 +897,7 @@ namespace UnityEditor.XCodeEditor
 				bool isWeak = ( filename.Length > 1 ) ? true : false;
 				string completePath = System.IO.Path.Combine( "System/Library/Frameworks", filename[0] );
 				this.AddFile( completePath, frameworkGroup, "SDKROOT", true, isWeak );
-				Debug.Log(mod.group + ": Adding framework " + completePath + (isWeak ? " (weak linked)" : ""));
+				//Debug.Log(mod.group + ": Adding framework " + completePath + (isWeak ? " (weak linked)" : ""));
 			}
 			
 			//Debug.Log( "Adding files..." );
@@ -912,7 +912,7 @@ namespace UnityEditor.XCodeEditor
 				var files = System.IO.Directory.GetFiles( mod.path, extension, System.IO.SearchOption.AllDirectories );
 				foreach( string file in files ) {
 					this.AddFile( file, modGroup );
-					Debug.Log(mod.group + ": Adding file " + file);				
+					//Debug.Log(mod.group + ": Adding file " + file);				
 				}
 			}
 			
@@ -920,14 +920,14 @@ namespace UnityEditor.XCodeEditor
 			foreach( string folderPath in mod.folders ) {
 				string absoluteFolderPath = System.IO.Path.Combine( mod.path, folderPath );
 				this.AddFolder( absoluteFolderPath, modGroup, (string[])mod.excludes.ToArray( typeof(string) ) );
-				Debug.Log(mod.group + ": Adding folder " + absoluteFolderPath);
+				//Debug.Log(mod.group + ": Adding folder " + absoluteFolderPath);
 			}
 			
 			//Debug.Log( "Adding headerpaths..." );
 			foreach( string headerpath in mod.headerpaths ) {
 				string absoluteHeaderPath = System.IO.Path.Combine( mod.path, headerpath );
 				this.AddHeaderSearchPaths( absoluteHeaderPath );
-				Debug.Log(mod.group + ": Adding header path " + absoluteHeaderPath);
+				//Debug.Log(mod.group + ": Adding header path " + absoluteHeaderPath);
 			}
 			
 			this.Consolidate();
