@@ -3,7 +3,7 @@ using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-/*
+
 namespace UnityEditor.XCodeEditor
 {
 	public class XCodeEditorMenu
@@ -11,12 +11,25 @@ namespace UnityEditor.XCodeEditor
 
 		[MenuItem ("Build Tools/XCode Editor/DebugTest %t")]
 		static void DebugTest()
-		{	
+		{
 			string projectPath = Path.Combine( Directory.GetParent( Application.dataPath ).ToString(), "XCode" );
 //			Debug.Log( "XcodePath: " + projectPath );
 			
+			// Create a new project object from build target
+			XCProject project = new XCProject( projectPath );
+	
+			Debug.Log( Application.dataPath );
+			
+			// Find and run through all projmods files to patch the project
+			var files = System.IO.Directory.GetFiles( Application.dataPath, "*.projmod", SearchOption.AllDirectories );
+			foreach( var file in files ) {
+				Debug.Log ( file.ToString() );
+				project.ApplyMod( file );
+			}
+
+			
 //			XCProject currentProject = new XCProject( projectPath );
-			XCProject.ApplyMod( projectPath, "/Users/Elyn/Projects/UnityPlugins/Unity Sandbox Project/Assets/Modules/GameCenter/Editor/iOS/GameCenter.projmods" );
+//			XCProject.ApplyMod( projectPath, "/Users/Elyn/Projects/UnityPlugins/Unity Sandbox Project/Assets/Modules/GameCenter/Editor/iOS/GameCenter.projmods" );
 			
 			//Debug.Log(
 //			PBXDictionary test = new PBXDictionary();
@@ -94,4 +107,4 @@ namespace UnityEditor.XCodeEditor
 		}
 
 	}
-}*/
+}

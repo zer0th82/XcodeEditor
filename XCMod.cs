@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using Json = MiniJSON;
 
@@ -15,8 +16,8 @@ namespace UnityEditor.XCodeEditor
 //		private ArrayList files;
 //		private ArrayList folders;
 //		private ArrayList excludes;
-		private Hashtable _datastore;
-		private ArrayList _libs;
+		private Dictionary<string, object> _datastore;
+		private List<XCModFile> _libs;
 		
 		public string name { get; private set; }
 		public string path { get; private set; }
@@ -27,17 +28,17 @@ namespace UnityEditor.XCodeEditor
 			}
 		}
 		
-		public ArrayList patches {
+		public List<object> patches {
 			get {
-				return (ArrayList)_datastore["patches"];
+				return (List<object>)_datastore["patches"];
 			}
 		}
 		
-		public ArrayList libs {
+		public List<XCModFile> libs {
 			get {
 				if( _libs == null ) {
-					_libs = new ArrayList( ((ArrayList)_datastore["libs"]).Count );
-					foreach( string fileRef in (ArrayList)_datastore["libs"] ) {
+					_libs = new List<XCModFile>( ((List<object>)_datastore["libs"]).Count );
+					foreach( string fileRef in (List<object>)_datastore["libs"] ) {
 						_libs.Add( new XCModFile( fileRef ) );
 					}
 				}
@@ -45,33 +46,33 @@ namespace UnityEditor.XCodeEditor
 			}
 		}
 		
-		public ArrayList frameworks {
+		public List<object> frameworks {
 			get {
-				return (ArrayList)_datastore["frameworks"];
+				return (List<object>)_datastore["frameworks"];
 			}
 		}
 		
-		public ArrayList headerpaths {
+		public List<object> headerpaths {
 			get {
-				return (ArrayList)_datastore["headerpaths"];
+				return (List<object>)_datastore["headerpaths"];
 			}
 		}
 		
-		public ArrayList files {
+		public List<object> files {
 			get {
-				return (ArrayList)_datastore["files"];
+				return (List<object>)_datastore["files"];
 			}
 		}
 		
-		public ArrayList folders {
+		public List<object> folders {
 			get {
-				return (ArrayList)_datastore["folders"];
+				return (List<object>)_datastore["folders"];
 			}
 		}
 		
-		public ArrayList excludes {
+		public List<object> excludes {
 			get {
-				return (ArrayList)_datastore["excludes"];
+				return (List<object>)_datastore["excludes"];
 			}
 		}
 		
@@ -86,7 +87,7 @@ namespace UnityEditor.XCodeEditor
 			path = System.IO.Path.GetDirectoryName( filename );
 			
 			string contents = projectFileInfo.OpenText().ReadToEnd();
-			_datastore = (Hashtable)MiniJSON.jsonDecode( contents );
+			_datastore = (Dictionary<string, object>)MiniJSON.Json.Deserialize( contents );
 			
 //			group = (string)_datastore["group"];
 //			patches = (ArrayList)_datastore["patches"];

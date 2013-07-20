@@ -20,6 +20,7 @@ namespace UnityEditor.XCodeEditor
 		private string _rootObjectKey;
 	
 		public string projectRootPath { get; private set; }
+		private FileInfo projectFileInfo;
 		
 		public string filePath { get; private set; }
 		private string sourcePathRoot;
@@ -54,7 +55,6 @@ namespace UnityEditor.XCodeEditor
 		
 		public XCProject( string filePath ) : this()
 		{
-			filePath = Path.GetFullPath(filePath);
 			if( !System.IO.Directory.Exists( filePath ) ) {
 				Debug.LogWarning( "Path does not exists." );
 				return;
@@ -76,10 +76,8 @@ namespace UnityEditor.XCodeEditor
 				this.filePath = projects[ 0 ];	
 			}
 			
-			FileInfo projectFileInfo = new FileInfo( Path.Combine( this.filePath, "project.pbxproj" ) );
-			StreamReader sr = projectFileInfo.OpenText();
-			string contents = sr.ReadToEnd();
-			sr.Close();
+			projectFileInfo = new FileInfo( Path.Combine( this.filePath, "project.pbxproj" ) );
+			string contents = projectFileInfo.OpenText().ReadToEnd();
 			
 			PBXParser parser = new PBXParser();
 			_datastore = parser.Decode( contents );
@@ -271,20 +269,6 @@ namespace UnityEditor.XCodeEditor
 			return modified;
 		}
 		
-		public bool AddFrameworkSearchPaths( string path )
-		{
-			return AddFrameworkSearchPaths( new PBXList( path ) );
-		}
-		
-		public bool AddFrameworkSearchPaths( PBXList paths )
-		{
-			foreach( KeyValuePair<string, XCBuildConfiguration> buildConfig in buildConfigurations ) {
-				buildConfig.Value.AddFrameworkSearchPaths( paths );
-			}
-			modified = true;
-			return modified;
-		}
-		
 		
 //		public PBXList GetObjectOfType( string type )
 //		{
@@ -377,14 +361,9 @@ namespace UnityEditor.XCodeEditor
 							buildFiles.Add( buildFile );
 							currentObject.Value.AddBuildFile( buildFile );
 						}
-						if ( !string.IsNullOrEmpty( absPath ) && ( tree.CompareTo( "SOURCE_ROOT" ) == 0 ) && (Directory.Exists( absPath ) || File.Exists( absPath )) ) {
-							string searchPath = Path.Combine( "$(SRCROOT)", Path.GetDirectoryName( filePath ) );
-							if(filePath.IndexOf(".framework") != -1) {
-								this.AddFrameworkSearchPaths( new PBXList( searchPath ) ); 
-							}
-							else {
-								this.AddLibrarySearchPaths( new PBXList( searchPath ) ); 
-							}
+						if ( !string.IsNullOrEmpty( absPath ) && ( tree.CompareTo( "SOURCE_ROOT" ) == 0 ) && File.Exists( absPath ) ) {
+							string libraryPath = Path.Combine( "$(SRCROOT)", Path.GetDirectoryName( filePath ) );
+							this.AddLibrarySearchPaths( new PBXList( libraryPath ) ); 
 						}
 						break;
 					case "PBXResourcesBuildPhase":
@@ -489,7 +468,7 @@ namespace UnityEditor.XCodeEditor
 			if( exclude == null )
 				exclude = new string[] {};
 			
-			//PBXDictionary results = new PBXDictionary();
+			PBXDictionary results = new PBXDictionary();
 			
 			if( parent == null )
 				parent = rootGroup;
@@ -884,52 +863,38 @@ namespace UnityEditor.XCodeEditor
 		{	
 			PBXGroup modGroup = this.GetGroup( mod.group );
 			
-			//Debug.Log( "Adding libraries..." );
+			Debug.Log( "Adding libraries..." );
 			PBXGroup librariesGroup = this.GetGroup( "Libraries" );
 			foreach( XCModFile libRef in mod.libs ) {
 				string completeLibPath = System.IO.Path.Combine( "usr/lib", libRef.filePath );
-				this.AddFile( completeLibPath, librariesGroup, "SDKROOT", true, libRef.isWeak );
-				//Debug.Log(mod.group + ": Adding lib " + completeLibPath);
+				this.AddFile( completeLibPath, modGroup, "SDKROOT", true, libRef.isWeak );
 			}
 			
-			//Debug.Log( "Adding frameworks..." );
+			Debug.Log( "Adding frameworks..." );
 			PBXGroup frameworkGroup = this.GetGroup( "Frameworks" );
 			foreach( string framework in mod.frameworks ) {
 				string[] filename = framework.Split( ':' );
 				bool isWeak = ( filename.Length > 1 ) ? true : false;
 				string completePath = System.IO.Path.Combine( "System/Library/Frameworks", filename[0] );
 				this.AddFile( completePath, frameworkGroup, "SDKROOT", true, isWeak );
-				//Debug.Log(mod.group + ": Adding framework " + completePath + (isWeak ? " (weak linked)" : ""));
 			}
 			
-			//Debug.Log( "Adding files..." );
+			Debug.Log( "Adding files..." );
 			foreach( string filePath in mod.files ) {
 				string absoluteFilePath = System.IO.Path.Combine( mod.path, filePath );
 				this.AddFile( absoluteFilePath, modGroup );
-				Debug.Log(mod.group + ": Adding file " + absoluteFilePath);
 			}
 			
-			//Add all files with known extensions
-			foreach(string extension in new ArrayList() {"*.h", "*.c", "*.cc", "*.cpp", "*.m", "*.mm", "*.a", "*.bundle", "*.framework"}) {
-				var files = System.IO.Directory.GetFiles( mod.path, extension, System.IO.SearchOption.AllDirectories );
-				foreach( string file in files ) {
-					this.AddFile( file, modGroup );
-					//Debug.Log(mod.group + ": Adding file " + file);				
-				}
-			}
-			
-			//Debug.Log( "Adding folders..." );
+			Debug.Log( "Adding folders..." );
 			foreach( string folderPath in mod.folders ) {
 				string absoluteFolderPath = System.IO.Path.Combine( mod.path, folderPath );
-				this.AddFolder( absoluteFolderPath, modGroup, (string[])mod.excludes.ToArray( typeof(string) ) );
-				//Debug.Log(mod.group + ": Adding folder " + absoluteFolderPath);
+				this.AddFolder( absoluteFolderPath, modGroup, (string[])mod.excludes.ToArray() );
 			}
 			
-			//Debug.Log( "Adding headerpaths..." );
+			Debug.Log( "Adding headerpaths..." );
 			foreach( string headerpath in mod.headerpaths ) {
 				string absoluteHeaderPath = System.IO.Path.Combine( mod.path, headerpath );
 				this.AddHeaderSearchPaths( absoluteHeaderPath );
-				//Debug.Log(mod.group + ": Adding header path " + absoluteHeaderPath);
 			}
 			
 			this.Consolidate();
