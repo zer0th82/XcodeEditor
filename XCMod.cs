@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using Json = MiniJSON;
+using Json = MiniJSON.Json;
 
 namespace UnityEditor.XCodeEditor 
 {
@@ -87,7 +87,7 @@ namespace UnityEditor.XCodeEditor
 			path = System.IO.Path.GetDirectoryName( filename );
 			
 			string contents = projectFileInfo.OpenText().ReadToEnd();
-			_datastore = (Dictionary<string, object>)MiniJSON.Json.Deserialize( contents );
+			_datastore = (Dictionary<string, object>)Json.Deserialize( contents );
 			
 //			group = (string)_datastore["group"];
 //			patches = (ArrayList)_datastore["patches"];
